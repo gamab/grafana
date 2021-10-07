@@ -71,7 +71,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: gen-version
   image: grafana/build-container:1.4.3
@@ -318,7 +318,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: gen-version
   image: grafana/build-container:1.4.3
@@ -804,7 +804,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: gen-version
   image: grafana/build-container:1.4.3
@@ -1192,7 +1192,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: lint-backend-enterprise2
   image: grafana/build-container:1.4.3
@@ -1782,7 +1782,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: gen-version
   image: grafana/build-container:1.4.3
@@ -2159,7 +2159,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: lint-backend-enterprise2
   image: grafana/build-container:1.4.3
@@ -2736,7 +2736,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: gen-version
   image: grafana/build-container:1.4.3
@@ -3081,7 +3081,7 @@ steps:
   commands:
   - ./bin/linux-amd64/grafana-cli cue validate-schema --grafana-root .
   depends_on:
-  - build-backend
+  - build-binary
 
 - name: lint-backend-enterprise2
   image: grafana/build-container:1.4.3
@@ -3538,6 +3538,6 @@ get:
 
 ---
 kind: signature
-hmac: 6a39d916cb21a4812d1dc7a83392d6a5d02ba23e6e1bf1f9f4ce110b2fa3b103
+hmac: 94cb31c108fcb41ff6e8cb8ae721a9d8170227bd2d10bb930351e7e022f8500b
 
 ...
