@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-kit/log"
 	"github.com/inconshreveable/log15"
 )
 
@@ -23,7 +24,7 @@ import (
 type FileLogWriter struct {
 	mw *MuxWriter
 
-	Format           log15.Format
+	Format           log.Logger
 	Filename         string
 	Maxlines         int
 	maxlinesCurlines int
