@@ -186,7 +186,7 @@ steps:
   commands:
   - ./scripts/ci-reference-docs-lint.sh ci
   depends_on:
-  - build-frontend
+  - test-frontend
 
 - name: build-docs-website
   image: grafana/docs-base:latest
@@ -508,7 +508,7 @@ steps:
   commands:
   - ./scripts/ci-reference-docs-lint.sh ci
   depends_on:
-  - build-frontend
+  - test-frontend
 
 - name: copy-packages-for-docker
   image: grafana/build-container:1.4.3
@@ -3678,6 +3678,6 @@ get:
 
 ---
 kind: signature
-hmac: b29d6b98eea2a568ccfedba563d47b0830b1c0076fc341d8b9c38a107986ed7c
+hmac: 1b7e87ffbc96347c84b2727a8c9f7bef4172d3c57696fcebd8a564281b84ef0b
 
 ...
