@@ -38,10 +38,49 @@ steps:
   depends_on:
   - initialize
 
-- name: build-backend
+- name: lint-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --variants linux-x64,linux-x64-musl,osx64,win64,armv6 --no-pull-enterprise
+  - ./bin/grabpl lint-backend --edition oss
+  environment:
+    CGO_ENABLED: 1
+  depends_on:
+  - initialize
+
+- name: lint-frontend
+  image: grafana/build-container:1.4.3
+  commands:
+  - yarn run prettier:check
+  - yarn run lint
+  - yarn run typecheck
+  - yarn run check-strict
+  environment:
+    TEST_MAX_WORKERS: 50%
+  depends_on:
+  - initialize
+
+- name: test-backend
+  image: grafana/build-container:1.4.3
+  commands:
+  - "[ $(grep FocusConvey -R pkg | wc -l) -eq \"0\" ] || exit 1"
+  - ./bin/grabpl test-backend --edition oss
+  - ./bin/grabpl integration-tests --edition oss
+  depends_on:
+  - lint-backend
+
+- name: test-frontend
+  image: grafana/build-container:1.4.3
+  commands:
+  - yarn run ci:test-frontend
+  environment:
+    TEST_MAX_WORKERS: 50%
+  depends_on:
+  - lint-frontend
+
+- name: init-backend
+  image: grafana/build-container:1.4.3
+  commands:
+  - ./bin/grabpl init-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --variants linux-x64,linux-x64-musl,osx64,win64,armv6 --no-pull-enterprise
   depends_on:
   - initialize
 
@@ -86,7 +125,7 @@ steps:
   - ./bin/grabpl gen-version --build-id ${DRONE_BUILD_NUMBER}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
@@ -174,6 +213,39 @@ steps:
     edition: oss
   depends_on:
   - copy-packages-for-docker
+
+- name: postgres-integration-tests
+  image: grafana/build-container:1.4.3
+  commands:
+  - apt-get update
+  - apt-get install -yq postgresql-client
+  - dockerize -wait tcp://postgres:5432 -timeout 120s
+  - psql -p 5432 -h postgres -U grafanatest -d grafanatest -f devenv/docker/blocks/postgres_tests/setup.sql
+  - go clean -testcache
+  - ./bin/grabpl integration-tests --database postgres
+  environment:
+    GRAFANA_TEST_DB: postgres
+    PGPASSWORD: grafanatest
+    POSTGRES_HOST: postgres
+  depends_on:
+  - test-backend
+  - test-frontend
+
+- name: mysql-integration-tests
+  image: grafana/build-container:1.4.3
+  commands:
+  - apt-get update
+  - apt-get install -yq default-mysql-client
+  - dockerize -wait tcp://mysql:3306 -timeout 120s
+  - cat devenv/docker/blocks/mysql_tests/setup.sql | mysql -h mysql -P 3306 -u root -prootpass
+  - go clean -testcache
+  - ./bin/grabpl integration-tests --database mysql
+  environment:
+    GRAFANA_TEST_DB: mysql
+    MYSQL_HOST: mysql
+  depends_on:
+  - test-backend
+  - test-frontend
 
 services:
 - name: postgres
@@ -289,10 +361,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
+  - ./bin/grabpl init-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
   depends_on:
   - initialize
 
@@ -340,7 +412,7 @@ steps:
   - ./bin/grabpl gen-version --build-id ${DRONE_BUILD_NUMBER}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
@@ -776,10 +848,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition oss --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
+  - ./bin/grabpl init-backend --jobs 8 --edition oss --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -836,7 +908,7 @@ steps:
   - ./bin/grabpl gen-version ${DRONE_TAG}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
@@ -1174,10 +1246,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -1246,10 +1318,10 @@ steps:
   depends_on:
   - lint-backend
 
-- name: build-backend-enterprise2
+- name: init-backend-enterprise2
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise2 --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise2 --github-token $${GITHUB_TOKEN} --no-pull-enterprise ${DRONE_TAG}
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -1262,11 +1334,11 @@ steps:
   - ./bin/grabpl gen-version ${DRONE_TAG}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
-  - build-backend-enterprise2
+  - init-backend-enterprise2
   - test-backend-enterprise2
 
 - name: package
@@ -1774,10 +1846,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition oss --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
+  - ./bin/grabpl init-backend --jobs 8 --edition oss --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -1834,7 +1906,7 @@ steps:
   - ./bin/grabpl gen-version v7.3.0-test
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
@@ -2161,10 +2233,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -2233,10 +2305,10 @@ steps:
   depends_on:
   - lint-backend
 
-- name: build-backend-enterprise2
+- name: init-backend-enterprise2
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise2 --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise2 --github-token $${GITHUB_TOKEN} --no-pull-enterprise v7.3.0-test
   environment:
     GITHUB_TOKEN:
       from_secret: github_token
@@ -2249,11 +2321,11 @@ steps:
   - ./bin/grabpl gen-version v7.3.0-test
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
-  - build-backend-enterprise2
+  - init-backend-enterprise2
   - test-backend-enterprise2
 
 - name: package
@@ -2754,10 +2826,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
+  - ./bin/grabpl init-backend --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
   depends_on:
   - initialize
 
@@ -2805,7 +2877,7 @@ steps:
   - ./bin/grabpl gen-version --build-id ${DRONE_BUILD_NUMBER}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
@@ -3106,10 +3178,10 @@ steps:
   depends_on:
   - lint-frontend
 
-- name: build-backend
+- name: init-backend
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise --build-id ${DRONE_BUILD_NUMBER} --no-pull-enterprise
   depends_on:
   - initialize
 
@@ -3169,10 +3241,10 @@ steps:
   depends_on:
   - lint-backend
 
-- name: build-backend-enterprise2
+- name: init-backend-enterprise2
   image: grafana/build-container:1.4.3
   commands:
-  - ./bin/grabpl build-backend --jobs 8 --edition enterprise2 --build-id ${DRONE_BUILD_NUMBER} --variants linux-x64 --no-pull-enterprise
+  - ./bin/grabpl init-backend --jobs 8 --edition enterprise2 --build-id ${DRONE_BUILD_NUMBER} --variants linux-x64 --no-pull-enterprise
   depends_on:
   - initialize
 
@@ -3182,11 +3254,11 @@ steps:
   - ./bin/grabpl gen-version --build-id ${DRONE_BUILD_NUMBER}
   depends_on:
   - build-plugins
-  - build-backend
+  - init-backend
   - build-frontend
   - codespell
   - shellcheck
-  - build-backend-enterprise2
+  - init-backend-enterprise2
   - test-backend-enterprise2
 
 - name: package
@@ -3606,6 +3678,6 @@ get:
 
 ---
 kind: signature
-hmac: 2db6cdd96cc9f1d7698717e47cb0b28ebd18f9d054cc0b80a90f3589d4d1bc8a
+hmac: 7f8974ae96864bba3564f4fd122c39d63b829fccff9975f344ef67f87b85ad78
 
 ...
