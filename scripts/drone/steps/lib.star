@@ -331,7 +331,7 @@ def build_binary_step(binary, edition, ver_mode, variants=None, is_downstream=Fa
         'name': 'build-binary' + '-' + binary,
         'image': build_image,
         'depends_on': [
-            'initialize',
+            'init-backend',
         ],
         'environment': env,
         'commands': cmds,

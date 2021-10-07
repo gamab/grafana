@@ -89,14 +89,14 @@ steps:
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-server
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-cli
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -373,14 +373,14 @@ steps:
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-server
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-cli
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -866,7 +866,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
@@ -876,7 +876,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -1264,7 +1264,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
@@ -1274,7 +1274,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -1864,7 +1864,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
@@ -1874,7 +1874,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -2251,7 +2251,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
@@ -2261,7 +2261,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: github_token
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -2838,14 +2838,14 @@ steps:
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-server
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition oss --build-id ${DRONE_BUILD_NUMBER} --binary grafana-cli
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -3190,14 +3190,14 @@ steps:
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition enterprise --build-id ${DRONE_BUILD_NUMBER} --binary grafana-server
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-binary-grafana-cli
   image: grafana/build-container:1.4.3
   commands:
   - ./bin/grabpl build-binary --jobs 8 --edition enterprise --build-id ${DRONE_BUILD_NUMBER} --binary grafana-cli
   depends_on:
-  - initialize
+  - init-backend
 
 - name: build-frontend
   image: grafana/build-container:1.4.3
@@ -3678,6 +3678,6 @@ get:
 
 ---
 kind: signature
-hmac: 7f8974ae96864bba3564f4fd122c39d63b829fccff9975f344ef67f87b85ad78
+hmac: b29d6b98eea2a568ccfedba563d47b0830b1c0076fc341d8b9c38a107986ed7c
 
 ...
