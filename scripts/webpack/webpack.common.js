@@ -69,6 +69,9 @@ module.exports = {
     new CopyUniconsPlugin(),
     new ModuleFederationPlugin({
       name: 'grafana',
+      filename: 'remoteEntry.js',
+      remotes: {},
+      exposes: {},
       shared: {
         react: { eager: true, singleton: true, requiredVersion: deps.react },
         'react-dom': { eager: true, singleton: true, requiredVersion: deps['react-dom'] },
